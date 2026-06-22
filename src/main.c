@@ -59,39 +59,42 @@ int main()
 		perror("reader thread creation failed:");
 	}
 
-	pthread_join(key,NULL);
+	pthread_join(gui,NULL);
+	pthread_cancel(key);
+	pthread_join(key, NULL);
 	endwin();					/* End curses mode		  */
 
 	return 0;
 }
 
 snake *createSnake(){
-	snake_part *body = malloc(3*sizeof(snake_part));
+	snake_part *body0 = malloc(sizeof(snake_part));
+	snake_part *body1 = malloc(sizeof(snake_part));
+	snake_part *body2 = malloc(sizeof(snake_part));
 	snake *s = malloc(sizeof(snake));
-	s->head=&body[0];
-	s->butt=&body[2];
-	body[0].prev=NULL;	 		body[0].next=&body[1];		body[0].x = 10;			body[0].y = LINES / 2;
-	body[1].prev=&body[0];		body[1].next=&body[2];		body[1].x = 11;			body[1].y = LINES / 2;
-	body[2].prev=&body[1];		body[2].next=NULL;			body[2].x = 12;			body[2].y = LINES / 2;
+	s->head=body0;
+	s->butt=body2;
+	body0->prev=NULL;	 	body0->next=body1;		body0->x = 10;			body0->y = LINES / 2;
+	body1->prev=body0;		body1->next=body2;		body1->x = 11;			body1->y = LINES / 2;
+	body2->prev=body1;		body2->next=NULL;		body2->x = 12;			body2->y = LINES / 2;
 	return s;
 }
 
 void eat(snake *s, food *f){
-	snake_part *body = malloc(3*sizeof(snake_part));
-	body[0].prev=s->butt; 		body[0].next=&body[1];		body[0].x = s->butt->x;			body[0].y = s->butt->y;
-	body[1].prev=&body[0];		body[1].next=&body[2];		body[1].x = s->butt->x;			body[1].y = s->butt->y;
-	body[2].prev=&body[1];		body[2].next=NULL;			body[2].x = s->butt->x;			body[2].y = s->butt->y;
-	s->butt->next = &body[0];
-	s->butt=&body[2];
+	snake_part *body0 = malloc(sizeof(snake_part));
+	snake_part *body1 = malloc(sizeof(snake_part));
+	snake_part *body2 = malloc(sizeof(snake_part));
+	body0->prev=s->butt; 		body0->next=body1;		body0->x = s->butt->x;			body0->y = s->butt->y;
+	body1->prev=body0;		body1->next=body2;		body1->x = s->butt->x;			body1->y = s->butt->y;
+	body2->prev=body1;		body2->next=NULL;		body2->x = s->butt->x;			body2->y = s->butt->y;
+	s->butt->next = body0;
+	s->butt=body2;
 }
 
 void createFood(food *f){
-	food *last = f;
-	food *newFood = malloc(sizeof(food));
-	if(last == NULL){
-		last = newFood;
-	}
 	if(frame % FOOD_INTERVAL == 0){
+		food *last = f;
+		food *newFood = malloc(sizeof(food));
 		while(last->next != NULL){
 			last = last->next;
 		}
@@ -178,7 +181,10 @@ int guiLoop(){
 			createFood(f);
 			moveSnake(s);
 			if(checkCollision(s, f) < 0){
-				game=0;
+				endwin();	
+				printf("collision!\n");
+				freeMemory(s, f);
+				return;
 			}
 			printSnake(s);
 			printFood(f);
@@ -187,7 +193,23 @@ int guiLoop(){
 		usleep(1000*REDRAW_INTERVAL);
 		frame++;
 	}
-	free(s);
+
+}
+
+int freeMemory(snake *snake_head, food *food_head) {
+	snake_part *s = snake_head->head;
+	while(s != NULL) {
+		snake *next = s->next;
+		free(s);
+		s = next;
+	}
+	free(snake_head);
+	food *f = food_head;
+	while(f != NULL) {
+		food *next = f->next;
+		free(f);
+		f = next;
+	}
 }
 
 int checkCollision(snake *s, food *f){
@@ -197,9 +219,8 @@ int checkCollision(snake *s, food *f){
 
 	do{
 		if(p->x == s->head->x & p->y == s->head->y){
-			endwin();	
-			printf("collision!");		
-			exit(0);
+			return -1;
+
 		}
 		p = p->next;
 		i++;
@@ -212,10 +233,13 @@ int checkCollision(snake *s, food *f){
 		}
 		f2 = f2->next;
 	}while(f2 != NULL);
+	return 0;
 }
 
 
 int keyLoop(){
+	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL); 
+	pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
 	int ch;
 	int run = 1;
 	while(run){
@@ -232,6 +256,8 @@ int keyLoop(){
 				dir = ch;
 				break;	
 		}
+		pthread_testcancel();
 
 	}	
 }
+
