@@ -97,8 +97,34 @@ void eat(snake *s){
 	s->butt=body2;
 }
 
-void removeFood(food_chain* fc, food* f) {
+food* removeFood(food_chain* fc, food* f) {
+	food* prev = f->prev;
+	if (f->prev != NULL && f->next != NULL) {
+		f->prev->next = f->next;
+		f->next->prev = f->prev;
 
+	}
+	
+	if (f->prev == NULL && f->next != NULL) {
+		//we are first food
+		fc->head = f->next;
+		f->next->prev = NULL;
+	}
+
+	if (f->prev != NULL && f->next == NULL) {
+		//we are last food
+		fc->butt = f->prev;
+		f->prev->next = NULL;
+	}
+	
+	if (f->prev == NULL && f->next == NULL) {
+		//we are only food
+		fc->head = NULL;	
+		fc->butt = NULL;
+	}
+	
+	free(f);
+	return prev;
 }
 
 void createFood(food_chain *fc){
@@ -188,6 +214,8 @@ void moveSnake(snake *s){
 int guiLoop(){
 	snake *s = createSnake();
 	food_chain *fc = malloc(sizeof(food_chain));
+	fc->head = NULL;
+	fc->butt = NULL;
 	createFood(fc);
 	frame=0;
 	srand(time(0));
@@ -245,13 +273,15 @@ int checkCollision(snake *s, food_chain *fc){
 	}while(p != NULL);
 
 
-	do{
+	while(f2 != NULL){
 		if(f2->x == s->head->x && f2->y == s->head->y){
 			eat(s);
-			removeFood(fc, f2);
+			f2 = removeFood(fc, f2);
 		}
-		f2 = f2->next;
-	}while(f2 != NULL);
+		if (f2 != NULL) {
+			f2 = f2->next;
+		}
+	}
 	return 0;
 }
 
