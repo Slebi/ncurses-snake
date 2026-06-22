@@ -22,18 +22,24 @@ typedef struct snake_struct {
 
 typedef struct food_struct {
 	struct food_struct* next;
+	struct food_struct* prev;
 	int x;
 	int y;
 } food;
+
+typedef struct food_chain_struct {
+	food *head;
+	food *butt;
+} food_chain;
 
 int keyLoop();
 int guiLoop();
 snake *createSnake();
 void printSnake(snake *s);
-void createFood(food *f);
-void printFood(food *f);
-int checkCollision(snake *s, food *f);
-void eat(snake *s, food *f);
+void createFood(food_chain *fc);
+void printFood(food_chain *fc);
+int checkCollision(snake *s, food_chain *fc);
+void eat(snake *s);
 
 int frame = 0;
 
@@ -80,7 +86,7 @@ snake *createSnake(){
 	return s;
 }
 
-void eat(snake *s, food *f){
+void eat(snake *s){
 	snake_part *body0 = malloc(sizeof(snake_part));
 	snake_part *body1 = malloc(sizeof(snake_part));
 	snake_part *body2 = malloc(sizeof(snake_part));
@@ -91,17 +97,30 @@ void eat(snake *s, food *f){
 	s->butt=body2;
 }
 
-void createFood(food *f){
+void removeFood(food_chain* fc, food* f) {
+
+}
+
+void createFood(food_chain *fc){
 	if(frame % FOOD_INTERVAL == 0){
-		food *last = f;
+		food *last = fc->head;
+
 		food *newFood = malloc(sizeof(food));
-		while(last->next != NULL){
-			last = last->next;
+		if (last != NULL) {
+			while(last->next != NULL){
+				last = last->next;
+			}
+			last->next = newFood;
+		} else {
+			//we are the first food
+			fc->head = newFood;
 		}
-		last->next = newFood;
+
 		newFood->next = NULL;
+		newFood->prev = last;
 		newFood->x = rand() % COLS;
 		newFood->y = rand() % LINES;
+		fc->butt = newFood;
 	}	
 }
 
@@ -116,8 +135,8 @@ void printSnake(snake *s){
 	
 }
 
-void printFood(food *f){
-	food *f2 = f;
+void printFood(food_chain *fc){
+	food *f2 = fc->head;
 	do{
 		mvprintw(f2->y,f2->x,"F");
 		f2 = f2->next;
@@ -168,26 +187,24 @@ void moveSnake(snake *s){
 
 int guiLoop(){
 	snake *s = createSnake();
-	food *f = malloc(sizeof(food));
-	f->next = NULL;
-	f->x = 10;
-	f->y = 10;
+	food_chain *fc = malloc(sizeof(food_chain));
+	createFood(fc);
 	frame=0;
 	srand(time(0));
 	int game =1;
 	while(1){
 		erase();
 		if(game){
-			createFood(f);
+			createFood(fc);
 			moveSnake(s);
-			if(checkCollision(s, f) < 0){
+			if(checkCollision(s, fc) < 0){
 				endwin();	
 				printf("collision!\n");
-				freeMemory(s, f);
+				freeMemory(s, fc);
 				return;
 			}
 			printSnake(s);
-			printFood(f);
+			printFood(fc);
 		}
 		refresh();					/* Print it on to the real screen */
 		usleep(1000*REDRAW_INTERVAL);
@@ -196,7 +213,7 @@ int guiLoop(){
 
 }
 
-int freeMemory(snake *snake_head, food *food_head) {
+int freeMemory(snake *snake_head, food_chain *fc) {
 	snake_part *s = snake_head->head;
 	while(s != NULL) {
 		snake *next = s->next;
@@ -204,16 +221,17 @@ int freeMemory(snake *snake_head, food *food_head) {
 		s = next;
 	}
 	free(snake_head);
-	food *f = food_head;
+	food *f = fc->head;
 	while(f != NULL) {
 		food *next = f->next;
 		free(f);
 		f = next;
 	}
+	free(fc);
 }
 
-int checkCollision(snake *s, food *f){
-	food *f2 = f;
+int checkCollision(snake *s, food_chain *fc){
+	food *f2 = fc->head;
 	snake_part *p = s->head->next;
 	int i = 0;
 
@@ -229,7 +247,8 @@ int checkCollision(snake *s, food *f){
 
 	do{
 		if(f2->x == s->head->x && f2->y == s->head->y){
-			eat(s,f2);
+			eat(s);
+			removeFood(fc, f2);
 		}
 		f2 = f2->next;
 	}while(f2 != NULL);
