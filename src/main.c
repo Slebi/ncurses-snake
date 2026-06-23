@@ -9,6 +9,18 @@
 #define REDRAW_INTERVAL		100
 #define FOOD_INTERVAL		20
 
+char *food_symbols[] = {
+    "🍎",
+    "🍕",
+    "🍔",
+    "🌮",
+    "🍣",
+    "🍩",
+    "🥗"
+};
+
+#define N_FOOD_TYPES 		7
+
 typedef struct snake_part_struct {
 	struct snake_part_struct* next;
 	struct snake_part_struct* prev;
@@ -26,6 +38,7 @@ typedef struct food_struct {
 	struct food_struct* prev;
 	int x;
 	int y;
+	int type;
 } food;
 
 typedef struct food_chain_struct {
@@ -157,6 +170,7 @@ void createFood(food_chain *fc){
 		newFood->prev = last;
 		newFood->x = rand() % state->field_width;
 		newFood->y = rand() % state->field_height;
+		newFood->type = rand() % N_FOOD_TYPES;
 		fc->butt = newFood;
 	}	
 }
@@ -175,7 +189,7 @@ void printSnake(snake *s){
 void printFood(food_chain *fc){
 	food *f2 = fc->head;
 	do{
-		mvprintw(f2->y,f2->x,"🍔");
+		mvprintw(f2->y,f2->x,food_symbols[f2->type]);
 		f2 = f2->next;
 	}while(f2 != NULL);
 }
