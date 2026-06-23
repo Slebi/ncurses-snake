@@ -273,16 +273,13 @@ int guiLoop(){
 	createFood(fc);
 	srand(time(0));
 	int game =1;
-	while(1){
+	while(state->lives > 0){
 		erase();
 		if(game){
 			createFood(fc);
 			moveSnake(s);
 			if(checkCollision(s, fc) < 0){
-				endwin();	
-				printf("collision! 🐢 🐢\n");
-				freeMemory(s, fc);
-				return;
+				state->lives--;	
 			}
 			printGameState();
 			printSnake(s);
@@ -292,6 +289,10 @@ int guiLoop(){
 		usleep(1000*REDRAW_INTERVAL);
 		state->frame++;
 	}
+	endwin();	
+	printf("🐢 🐢 G A M E    O V E R 🐢 🐢\n");
+	freeMemory(s, fc);
+	return;
 
 }
 
