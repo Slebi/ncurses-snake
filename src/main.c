@@ -32,6 +32,13 @@ typedef struct food_chain_struct {
 	food *butt;
 } food_chain;
 
+typedef struct game_state_struct {
+	int frame;
+	int lives;
+	int points;
+	int level;
+} game_state;
+
 int keyLoop();
 int guiLoop();
 snake *createSnake();
@@ -41,7 +48,7 @@ void printFood(food_chain *fc);
 int checkCollision(snake *s, food_chain *fc);
 void eat(snake *s);
 
-int frame = 0;
+game_state *state;
 
 int dir = KEY_LEFT;
 
@@ -95,6 +102,7 @@ void eat(snake *s){
 	body2->prev=body1;		body2->next=NULL;		body2->x = s->butt->x;			body2->y = s->butt->y;
 	s->butt->next = body0;
 	s->butt=body2;
+	state->points += 10 * state->level;
 }
 
 food* removeFood(food_chain* fc, food* f) {
@@ -128,7 +136,7 @@ food* removeFood(food_chain* fc, food* f) {
 }
 
 void createFood(food_chain *fc){
-	if(frame % FOOD_INTERVAL == 0){
+	if(state->frame % FOOD_INTERVAL == 0){
 		food *last = fc->head;
 
 		food *newFood = malloc(sizeof(food));
@@ -212,12 +220,16 @@ void moveSnake(snake *s){
 }
 
 int guiLoop(){
+	state = malloc(sizeof(game_state));
 	snake *s = createSnake();
 	food_chain *fc = malloc(sizeof(food_chain));
 	fc->head = NULL;
 	fc->butt = NULL;
 	createFood(fc);
-	frame=0;
+	state->frame=0;
+	state->points=0;
+	state->lives=5;
+	state->level=1;
 	srand(time(0));
 	int game =1;
 	while(1){
@@ -236,7 +248,7 @@ int guiLoop(){
 		}
 		refresh();					/* Print it on to the real screen */
 		usleep(1000*REDRAW_INTERVAL);
-		frame++;
+		state->frame++;
 	}
 
 }
@@ -256,6 +268,7 @@ int freeMemory(snake *snake_head, food_chain *fc) {
 		f = next;
 	}
 	free(fc);
+	free(state);
 }
 
 int checkCollision(snake *s, food_chain *fc){
