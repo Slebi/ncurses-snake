@@ -198,6 +198,18 @@ void printGameState() {
 	for(int i = 0; i < COLS; i++ ) {
 		mvprintw(LINES-2,i,"=");
 	}
+	char pointStr[5];
+	sprintf(pointStr,"%i",state->points);
+	mvprintw(LINES-1,COLS-15,"💎");
+	mvprintw(LINES-1,COLS-12,pointStr);
+	mvprintw(LINES-1,COLS- 6,"❤️");
+	char liveStr[2];
+	sprintf(liveStr,"%i",state->lives);
+	mvprintw(LINES-1,COLS- 4,liveStr);
+	mvprintw(LINES-1,COLS- 3,"🪜");
+	char levelStr[2];
+	sprintf(levelStr,"%i",state->level);
+	mvprintw(LINES-1,COLS- 1,levelStr);
 }
 
 void moveSnake(snake *s){
