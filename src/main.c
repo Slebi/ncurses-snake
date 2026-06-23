@@ -265,7 +265,7 @@ void initGameState(){
 }
 
 int getRedrawInterval() {
-	return REDRAW_INTERVAL / state->level;
+	return REDRAW_INTERVAL / (1 + (state->level / 3));
 }
 
 void incrementLevel() {
