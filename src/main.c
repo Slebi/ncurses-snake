@@ -3,8 +3,9 @@
 #include <pthread.h>
 #include <stdlib.h>
 #include <time.h>
+#include <locale.h>
 
-#define KEY_ESCAPE 			27 
+#define KEY_ESCAPE 		27 
 #define REDRAW_INTERVAL		100
 #define FOOD_INTERVAL		20
 
@@ -37,6 +38,8 @@ typedef struct game_state_struct {
 	int lives;
 	int points;
 	int level;
+	int field_width;
+	int field_height;
 } game_state;
 
 int keyLoop();
@@ -57,7 +60,7 @@ int dir = KEY_LEFT;
 int main()
 {	
 	pthread_t gui, key;
-	
+	setlocale(LC_ALL, "");
 	initscr();					/* Start curses mode 		  */
 	raw();						/* Line buffering disabled	*/
 	keypad(stdscr, TRUE);		/* We get F1, F2 etc..		*/
@@ -152,8 +155,8 @@ void createFood(food_chain *fc){
 
 		newFood->next = NULL;
 		newFood->prev = last;
-		newFood->x = rand() % COLS;
-		newFood->y = rand() % LINES;
+		newFood->x = rand() % state->field_width;
+		newFood->y = rand() % state->field_height;
 		fc->butt = newFood;
 	}	
 }
@@ -172,9 +175,15 @@ void printSnake(snake *s){
 void printFood(food_chain *fc){
 	food *f2 = fc->head;
 	do{
-		mvprintw(f2->y,f2->x,"F");
+		mvprintw(f2->y,f2->x,"🍔");
 		f2 = f2->next;
 	}while(f2 != NULL);
+}
+
+void printGameState() {
+	for(int i = 0; i < COLS; i++ ) {
+		mvprintw(LINES-2,i,"=");
+	}
 }
 
 void moveSnake(snake *s){
@@ -199,37 +208,43 @@ void moveSnake(snake *s){
 		case KEY_LEFT:
 			x--;
 			if(x < 0){
-				x = COLS;
+				x = state->field_width;
 			}
 			break;	
 		case KEY_RIGHT:
-			x = (x + 1) % COLS;
+			x = (x + 1) % state->field_width;
 			break;	
 		case KEY_UP:
 			y--;
 			if(y < 0){
-				y = LINES;
+				y = state->field_height;
 			}
 			break;	
 		case KEY_DOWN:
-			y = (y + 1) % LINES;
+			y = (y + 1) % state->field_height;
 			break;	
 	}
 	head->x = x;
 	head->y = y;
 }
 
-int guiLoop(){
+void initGameState(){
 	state = malloc(sizeof(game_state));
+	state->frame=0;
+	state->points=0;
+	state->lives=5;
+	state->level=1;
+	state->field_width = COLS - 1; //is this a ubuntu terminal requirement?
+	state->field_height = LINES - 3; //game state info at bottom
+}
+
+int guiLoop(){
+	initGameState();
 	snake *s = createSnake();
 	food_chain *fc = malloc(sizeof(food_chain));
 	fc->head = NULL;
 	fc->butt = NULL;
 	createFood(fc);
-	state->frame=0;
-	state->points=0;
-	state->lives=5;
-	state->level=1;
 	srand(time(0));
 	int game =1;
 	while(1){
@@ -239,10 +254,11 @@ int guiLoop(){
 			moveSnake(s);
 			if(checkCollision(s, fc) < 0){
 				endwin();	
-				printf("collision!\n");
+				printf("collision! 🐢 🐢\n");
 				freeMemory(s, fc);
 				return;
 			}
+			printGameState();
 			printSnake(s);
 			printFood(fc);
 		}
@@ -287,7 +303,7 @@ int checkCollision(snake *s, food_chain *fc){
 
 
 	while(f2 != NULL){
-		if(f2->x == s->head->x && f2->y == s->head->y){
+		if((f2->x == s->head->x || f2->x+1 == s->head->x) && f2->y == s->head->y){
 			eat(s);
 			f2 = removeFood(fc, f2);
 		}
