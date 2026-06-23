@@ -118,10 +118,10 @@ void eat(snake *s){
 	body2->prev=body1;		body2->next=NULL;		body2->x = s->butt->x;			body2->y = s->butt->y;
 	s->butt->next = body0;
 	s->butt=body2;
-	state->points += 10 * state->level;
 }
 
 food* removeFood(food_chain* fc, food* f) {
+	state->points += (10 + f->type) * state->level * state->level;
 	food* prev = f->prev;
 	if (f->prev != NULL && f->next != NULL) {
 		f->prev->next = f->next;
@@ -264,6 +264,31 @@ void initGameState(){
 	state->field_height = LINES - 3; //game state info at bottom
 }
 
+int getRedrawInterval() {
+	return REDRAW_INTERVAL / state->level;
+}
+
+void incrementLevel() {
+	if (state->level == 1 && state->points > 300) {
+		state->level = 2;
+	}
+	if (state->level == 2 && state->points > 900) {
+		state->level = 3;
+	}
+	if (state->level == 3 && state->points > 2000) {
+		state->level = 4;
+	}
+	if (state->level == 4 && state->points > 4000) {
+		state->level = 5;
+	}
+	if (state->level == 5 && state->points > 15000) {
+		state->level = 6;
+	}
+	if (state->level == 6 && state->points > 20000) {
+		state->level = 7;
+	}
+}
+
 int guiLoop(){
 	initGameState();
 	snake *s = createSnake();
@@ -272,24 +297,26 @@ int guiLoop(){
 	fc->butt = NULL;
 	createFood(fc);
 	srand(time(0));
-	int game =1;
+
 	while(state->lives > 0){
 		erase();
-		if(game){
-			createFood(fc);
-			moveSnake(s);
-			if(checkCollision(s, fc) < 0){
-				state->lives--;	
-			}
-			printGameState();
-			printSnake(s);
-			printFood(fc);
+
+		createFood(fc);
+		moveSnake(s);
+		if(checkCollision(s, fc) < 0){
+			state->lives--;	
 		}
+		printGameState();
+		printSnake(s);
+		printFood(fc);
+		incrementLevel();
 		refresh();					/* Print it on to the real screen */
-		usleep(1000*REDRAW_INTERVAL);
+		usleep(1000*getRedrawInterval());
 		state->frame++;
 	}
-	endwin();	
+	endwin();
+	printf("💎 %i\n", state->points);
+	printf("🪜 %i\n", state->level);
 	printf("🐢 🐢 G A M E    O V E R 🐢 🐢\n");
 	freeMemory(s, fc);
 	return;
