@@ -1,5 +1,5 @@
 ## Compile and start
-`gcc -o snake ./src/main.c -lncurses && ./snake`
+`gcc -o snake ./src/main.c -lncursesw && ./snake`
 
 ### Valgrind
-`gcc -o snake ./src/main.c -lncurses && valgrind ./snake`
+`gcc -o snake ./src/main.c -lncursesw && valgrind ./snake`
