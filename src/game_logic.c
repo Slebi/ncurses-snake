@@ -1,13 +1,13 @@
 #include "snake.h"
 
-char *food_symbols[] = {
-    "🍎",
-    "🍕",
-    "🍔",
-    "🌮",
-    "🍣",
-    "🍩",
-    "🥗"
+wchar_t *food_symbols[] = {
+    L"🍎",
+    L"🍕",
+    L"🍔",
+    L"🌮",
+    L"🍣",
+    L"🍩",
+    L"🥗"
 };
 
 game_state *state;
@@ -107,7 +107,8 @@ void printSnake(snake *s){
 void printFood(food_chain *fc){
 	food *f2 = fc->head;
 	do{
-		mvprintw(f2->y,f2->x,food_symbols[f2->type]);
+		mvaddwstr(f2->y, f2->x, L" ");
+		mvaddwstr(f2->y, f2->x, food_symbols[f2->type]);
 		f2 = f2->next;
 	}while(f2 != NULL);
 }
@@ -118,16 +119,16 @@ void printGameState() {
 	}
 	char pointStr[5];
 	sprintf(pointStr,"%i",state->points);
-	mvprintw(LINES-1,COLS-15,"💎");
-	mvprintw(LINES-1,COLS-12,pointStr);
-	mvprintw(LINES-1,COLS- 6,"❤️");
+	mvaddwstr(LINES-1,COLS-15, L"💎 ");
+	mvprintw(LINES-1,COLS-11,pointStr);
+	mvaddwstr(LINES-1,COLS- 6, L"❤️ ");
 	char liveStr[2];
 	sprintf(liveStr,"%i",state->lives);
-	mvprintw(LINES-1,COLS- 4,liveStr);
-	mvprintw(LINES-1,COLS- 3,"🪜");
+	mvprintw(LINES-1,COLS- 3,liveStr);
+	mvaddwstr(LINES-1,COLS- 2, L"🪜 ");
 	char levelStr[2];
 	sprintf(levelStr,"%i",state->level);
-	mvprintw(LINES-1,COLS- 1,levelStr);
+	mvprintw(LINES-1,COLS,levelStr);
 }
 
 void moveSnake(snake *s){

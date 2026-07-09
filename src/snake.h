@@ -1,7 +1,9 @@
 #ifndef SNAKE_H
 #define SNAKE_H
 
+#define _XOPEN_SOURCE_EXTENDED 1
 #include <ncurses.h>
+#include <wchar.h>
 #include <unistd.h>
 #include <pthread.h>
 #include <stdlib.h>
@@ -50,7 +52,7 @@ typedef struct game_state_struct {
 } game_state;
 
 /* External variables */
-extern char *food_symbols[];
+extern wchar_t *food_symbols[];
 extern game_state *state;
 extern int dir;
 
