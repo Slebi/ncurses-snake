@@ -5,7 +5,6 @@
 #include <ncurses.h>
 #include <wchar.h>
 #include <unistd.h>
-#include <pthread.h>
 #include <stdlib.h>
 #include <time.h>
 #include <locale.h>
@@ -57,7 +56,6 @@ extern game_state *state;
 extern int dir;
 
 /* Function declarations */
-int keyLoop();
 int guiLoop();
 snake *createSnake();
 void printSnake(snake *s);

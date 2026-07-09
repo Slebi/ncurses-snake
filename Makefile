@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -Wall -Wextra
-LDFLAGS = -lncursesw -lpthread
+LDFLAGS = -lncursesw
 TARGET = snake
 SRC_DIR = src
 SOURCES = $(SRC_DIR)/main.c $(SRC_DIR)/game_logic.c

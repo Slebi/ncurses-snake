@@ -46,7 +46,7 @@ food* removeFood(food_chain* fc, food* f) {
 		f->next->prev = f->prev;
 
 	}
-	
+
 	if (f->prev == NULL && f->next != NULL) {
 		//we are first food
 		fc->head = f->next;
@@ -58,13 +58,13 @@ food* removeFood(food_chain* fc, food* f) {
 		fc->butt = f->prev;
 		f->prev->next = NULL;
 	}
-	
+
 	if (f->prev == NULL && f->next == NULL) {
 		//we are only food
-		fc->head = NULL;	
+		fc->head = NULL;
 		fc->butt = NULL;
 	}
-	
+
 	free(f);
 	return prev;
 }
@@ -90,7 +90,7 @@ void createFood(food_chain *fc){
 		newFood->y = rand() % state->field_height;
 		newFood->type = rand() % N_FOOD_TYPES;
 		fc->butt = newFood;
-	}	
+	}
 }
 
 void printSnake(snake *s){
@@ -101,7 +101,7 @@ void printSnake(snake *s){
 		mvprintw(p->y,p->x,"X");
 		p = p->next;
 	}while(p != NULL);
-	
+
 }
 
 void printFood(food_chain *fc){
@@ -155,19 +155,19 @@ void moveSnake(snake *s){
 			if(x < 0){
 				x = state->field_width;
 			}
-			break;	
+			break;
 		case KEY_RIGHT:
 			x = (x + 1) % state->field_width;
-			break;	
+			break;
 		case KEY_UP:
 			y--;
 			if(y < 0){
 				y = state->field_height;
 			}
-			break;	
+			break;
 		case KEY_DOWN:
 			y = (y + 1) % state->field_height;
-			break;	
+			break;
 	}
 	head->x = x;
 	head->y = y;
@@ -218,12 +218,26 @@ int guiLoop(){
 	srand(time(0));
 
 	while(state->lives > 0){
+		int ch = getch();
+		switch(ch)
+		{
+			case KEY_ESCAPE:
+				state->lives = 0;
+				break;
+			case KEY_LEFT:
+			case KEY_RIGHT:
+			case KEY_UP:
+			case KEY_DOWN:
+				dir = ch;
+				break;
+		}
+
 		erase();
 
 		createFood(fc);
 		moveSnake(s);
 		if(checkCollision(s, fc) < 0){
-			state->lives--;	
+			state->lives--;
 		}
 		printGameState();
 		printSnake(s);
@@ -285,29 +299,4 @@ int checkCollision(snake *s, food_chain *fc){
 		}
 	}
 	return 0;
-}
-
-
-int keyLoop(){
-	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL); 
-	pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
-	int ch;
-	int run = 1;
-	while(run){
-		ch = getch();
-		switch(ch)
-		{	
-			case KEY_ESCAPE:
-				run = 0;
-				break;
-			case KEY_LEFT:
-			case KEY_RIGHT:
-			case KEY_UP:
-			case KEY_DOWN:
-				dir = ch;
-				break;	
-		}
-		pthread_testcancel();
-
-	}	
 }
